@@ -1,0 +1,60 @@
+apache Notes
+
+Hardening:
+
+Remove cron jobs:
+sudo rm -rf /etc/cron.*   
+sudo rm -rf /var/spool/cron/crontabs/*
+
+Copy over backups:
+unzip http.zip
+cp /home/Aragorn/Downloads/http/pam/* /lib/x86_64-linux-gnu/security/ 
+cp -rT /home/Aragorn/Downloads/http/a2/apache2.bak/ /etc/
+cp /home/Aragorn/Downloads/http/a2/index.html.bak /var/www/html/
+cp /home/Aragorn/Downloads/http/a2/apache2.service.bak /usr/lib/systemd/system/
+cp /home/Aragorn/Downloads/http/a2/apache-htcacheclean.service.bak /usr/lib/systemd/system/
+cp /home/Aragorn/Downloads/http/a2/apachectl.bak /usr/sbin/
+sudo chattr +i /etc/apache2.bak/ /var/www/html/index.html.bak /usr/lib/systemd/system/apache2.service.bak /usr/lib/systemd/system/apache-htcacheclean.service.bak /usr/sbin/apachectl.bak /lib/x86_64-linux-gnu/security/*
+
+Restore backups every minute:
+sudo crontab -e   
+* * * * * cp -rT /etc/apache2.bak/ /etc/apache2/
+* * * * * cp /var/www/html/index.html.bak /var/www/html/index.html
+* * * * * cp /usr/lib/systemd/system/apache2.service.bak /usr/lib/systemd/system/apache2.service
+* * * * * cp /usr/lib/systemd/system/apache-htcacheclean.service.bak /usr/lib/systemd/system/apache-htcacheclean.service
+* * * * * cp /usr/sbin/apachectl.bak /usr/sbin/apachectl
+* * * * * a2ensite 000-default
+* * * * * systemctl daemon-reload
+* * * * * if ! systemctl is-active --quiet apache2.service; then sudo systemctl start apache2.service; fi
+
+sudo chattr +i /var/spool/cron/crontabs/root
+
+
+Other notes:
+
+View if a file is chattr'd with lsattr
+
+Configuration file:
+/etc/apache2/apache2.conf
+
+Service file:
+/usr/lib/systemd/system/apache2.service
+/usr/lib/systemd/system/apache-htcacheclean.service
+
+Logs:
+/var/log/apache2/access.log
+/var/log/apache2/error.log
+/var/log/apache2/other_vhosts_access.log
+
+info:
+https://httpd.apache.org/docs/2.4/
+
+Installing:
+sudo apt update
+sudo apt install apache2 -y
+sudo systemctl enable apache2
+sudo systemctl start apache2
+sudo systemctl status apache2
+
+Test if working:
+wget http://127.0.0.1

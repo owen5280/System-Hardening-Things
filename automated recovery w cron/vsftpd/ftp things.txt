@@ -1,0 +1,62 @@
+ftp Notes
+
+Hardening:
+
+Remove cron jobs:
+sudo rm -rf /etc/cron.*   
+sudo rm -rf /var/spool/cron/crontabs/*
+
+Copy over backups:
+scp /home/Aragorn/Downloads/vsftp.zip Aragorn@172.16.1.2:/home/Aragorn/Downloads/
+unzip vsftp.zip
+cp /home/Aragorn/Downloads/vsftpd/pam/* /lib/x86_64-linux-gnu/security/ 
+cp /home/Aragorn/Downloads/vsftpd/ftp/vsftpd.conf.bak /etc/
+cp /home/Aragorn/Downloads/vsftpd/ftp/vsftpd.service.bak /usr/lib/systemd/system/
+cp /home/Aragorn/Downloads/vsftpd/ftp/vsftpd.bak /usr/sbin/
+sudo chattr +i /etc/vsftpd.conf.bak /usr/lib/systemd/system/vsftpd.service.bak /usr/sbin/vsftpd.bak /lib/x86_64-linux-gnu/security/*
+
+Restore backups every minute:
+sudo crontab -e   
+* * * * * cp /etc/vsftpd.conf.bak /etc/vsftpd.conf
+* * * * * cp /usr/lib/systemd/system/vsftpd.service.bak /usr/lib/systemd/system/vsftpd.service
+* * * * * cp /usr/sbin/vsftpd.bak /usr/sbin/vsftpd
+* * * * * systemctl daemon-reload 
+* * * * * if ! systemctl is-active --quiet vsftpd.service; then sudo systemctl start vsftpd.service; fi
+
+chattr +i /var/spool/cron/crontabs/root
+
+
+Other notes:
+
+View if a file is chattr'd with lsattr
+
+Configuration file:
+/etc/vsftpd.conf
+
+Service file:
+/usr/lib/systemd/system/vsftpd.service  
+
+Logs:
+/var/log/vsftpd.log
+/var/log/xferlog
+
+man info:
+https://linux.die.net/man/5/vsftpd.conf
+
+Installing:
+sudo apt update
+sudo apt install vsftpd ftp ufw -y
+sudo systemctl enable vsftpd
+sudo systemctl start vsftpd
+sudo systemctl status vsftpd
+
+Creating FTP Users:
+sudo useradd -m ftp_user
+sudo passwd ftp_user
+sudo echo "This is the content in the file." > /home/ftp_user/testfile.txt
+
+Access ftp server:
+ftp localhost
+Enter user and pass
+ls /home/ftp_user
+exit
